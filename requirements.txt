@@ -1,0 +1,13 @@
+fastapi[all]==0.136.3
+alembic==1.18.4
+pydantic==2.13.4
+passlib[bcrypt]
+argon2_cffi
+pyjwt
+Faker
+pytest
+redis
+fastapi-cache2
+psycopg2-binary
+fastapi-mail[httpx]
+celery[redis]
