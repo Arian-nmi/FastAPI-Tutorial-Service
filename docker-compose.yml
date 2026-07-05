@@ -1,0 +1,70 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "postgres"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  smtp4dev:
+    image: rnwood/smtp4dev:v3
+    restart: always
+    container_name: smtp4dev
+    ports:
+      # Change the number before : to the port the web interface should be accessible on
+      # Add 127.0.0.1: prefix for localhost-only access (recommended for security)
+      - '5000:80'
+      # Change the number before : to the port the SMTP server should be accessible on
+      - '25:25'
+      # Change the number before : to the port the IMAP server should be accessible on
+      - '143:143'
+    volumes:
+      # This is where smtp4dev stores the database.
+      - smtp4dev-data:/smtp4dev
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: backend
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      JWT_SECRET_KEY: u%7bk96gbjzxlcwh3$$#djb$$ld32i++-8j!whix%$$m^2#ev9j-3
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "8000:8000"
+    command: bash -c 'fastapi dev --host 0.0.0.0 --port 8000'
+    volumes:
+      - ./core:/usr/src/core
+
+volumes:
+  smtp4dev-data:
