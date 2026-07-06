@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URL: str = "sqlite:///./sqlite.db"
     model_config = SettingsConfigDict(env_file=".env")
     JWT_SECRET_KEY: str = "test"
-    REDIS_URL: str
+    REDIS_URL: str = "redis://redis:6379"
 
     MAIL_USERNAME: str = ""
     MAIL_PASSWORD: str = ""
